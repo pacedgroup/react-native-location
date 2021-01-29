@@ -1,33 +1,22 @@
-import {
-  ConfigureOptions,
-  Subscription,
-  Location,
-  Heading,
-  RNLocationNativeInterface,
-  GetLatestLocationOptions
-} from "./types";
-import NativeInterface from "./lib/nativeInterface";
-import Subscriptions from "./lib/subscriptions";
-import { EventEmitter } from "react-native";
-import { promiseTimeoutResolveNull } from "./utils";
-
-let {
-  /**
-   * @ignore
-   */
-  nativeInterface,
-  /**
-   * @ignore
-   */
-  eventEmitter
-} = NativeInterface.get();
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var nativeInterface_1 = require("./lib/nativeInterface");
+var subscriptions_1 = require("./lib/subscriptions");
+var utils_1 = require("./utils");
+var _a = nativeInterface_1.default.get(), 
+/**
+ * @ignore
+ */
+nativeInterface = _a.nativeInterface, 
+/**
+ * @ignore
+ */
+eventEmitter = _a.eventEmitter;
 /**
  * The subscription helper. Only for internal use.
  * @ignore
  */
-let subscriptions: Subscriptions;
-
+var subscriptions;
 /**
  * Internal method to configure the helps. Useful for Jet testing.
  *
@@ -36,20 +25,15 @@ let subscriptions: Subscriptions;
  * @param {EventEmitter} evt Event emitter
  * @returns {void}
  */
-export const _configureHelpers = (
-  ni: RNLocationNativeInterface,
-  evt: EventEmitter
-): void => {
-  nativeInterface = ni;
-  eventEmitter = evt;
-  subscriptions = new Subscriptions(nativeInterface, eventEmitter);
-
-  eventEmitter.addListener("onWarning", opts => {
-    console.warn("react-native-location warning:", opts);
-  });
+exports._configureHelpers = function (ni, evt) {
+    nativeInterface = ni;
+    eventEmitter = evt;
+    subscriptions = new subscriptions_1.default(nativeInterface, eventEmitter);
+    eventEmitter.addListener("onWarning", function (opts) {
+        console.warn("react-native-location warning:", opts);
+    });
 };
-_configureHelpers(nativeInterface, eventEmitter);
-
+exports._configureHelpers(nativeInterface, eventEmitter);
 /**
  * This is used to configure the location provider. You can use this to enable background mode, filter location updates to a certain distance change, and ensure you have the power settings set correctly for your use case.
  *
@@ -58,22 +42,18 @@ _configureHelpers(nativeInterface, eventEmitter);
  * @param {ConfigureOptions} options The configuration options.
  * @returns {Promise<void>} A Promise which resolves when the configuration is completed.
  */
-export const configure = (options: ConfigureOptions): Promise<void> => {
-  return nativeInterface.configure(options);
+exports.configure = function (options) {
+    return nativeInterface.configure(options);
 };
-
 /**
  * Subscribe to location changes with the given listener. Ensure you have the correct permission before calling this method. The location provider will respect the settings you have given it.
  *
  * @param  {LocationCallback} listener The listener which will be called when the user location changes.
  * @returns {Subscription} The subscription function which can be used to unsubscribe.
  */
-export const subscribeToLocationUpdates = (
-  listener: (locations: Location[]) => void
-): Subscription => {
-  return subscriptions.subscribeToLocationUpdates(listener);
+exports.subscribeToLocationUpdates = function (listener) {
+    return subscriptions.subscribeToLocationUpdates(listener);
 };
-
 /**
  * Get the latest location. Ensure you have the correct permission before calling this method.
  *
@@ -84,52 +64,40 @@ export const subscribeToLocationUpdates = (
  * @param {GetLatestLocationOptions} options The options to use when getting the location.
  * @returns {Promise<Location | null>} A Promise which will resolve to the latest location, or to `null` if the timeout is reached.
  */
-export const getLatestLocation = (
-  options: GetLatestLocationOptions = {}
-): Promise<Location | null> => {
-  const locationPromise = new Promise<Location | null>(resolve => {
-    const unsubscribe = subscriptions.subscribeToLocationUpdates(locations => {
-      if (locations.length === 0) {
-        return;
-      }
-
-      // Sort the locations with the most recent first
-      const sortedLocations = locations.sort(
-        (a, b) => b.timestamp - a.timestamp
-      );
-
-      // Unsubscribe from future updates
-      if (unsubscribe) {
-        unsubscribe();
-      }
-
-      // Resolve the promise with the latest location
-      resolve(sortedLocations[0]);
+exports.getLatestLocation = function (options) {
+    if (options === void 0) { options = {}; }
+    var locationPromise = new Promise(function (resolve) {
+        var unsubscribe = subscriptions.subscribeToLocationUpdates(function (locations) {
+            if (locations.length === 0) {
+                return;
+            }
+            // Sort the locations with the most recent first
+            var sortedLocations = locations.sort(function (a, b) { return b.timestamp - a.timestamp; });
+            // Unsubscribe from future updates
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            // Resolve the promise with the latest location
+            resolve(sortedLocations[0]);
+        });
     });
-  });
-
-  // The user has explicitly turned off the timeout so return the promise directly
-  if (options.timeout === null) {
-    return locationPromise;
-  }
-
-  // Setup the timeout with a default value if one was not supplied
-  const timeout = options.timeout || 10000;
-  return promiseTimeoutResolveNull(timeout, locationPromise);
+    // The user has explicitly turned off the timeout so return the promise directly
+    if (options.timeout === null) {
+        return locationPromise;
+    }
+    // Setup the timeout with a default value if one was not supplied
+    var timeout = options.timeout || 10000;
+    return utils_1.promiseTimeoutResolveNull(timeout, locationPromise);
 };
-
 /**
  * Subscribe to heading changes with the given listener. Ensure you have the correct permission before calling this method. The location provider will respect the settings you have given it.
  *
  * @param  {LocationCallback} listener The listener which will be called when the heading changes.
  * @returns {Subscription} The subscription function which can be used to unsubscribe.
  */
-export const subscribeToHeadingUpdates = (
-  listener: (heading: Heading) => void
-): Subscription => {
-  return subscriptions.subscribeToHeadingUpdates(listener);
+exports.subscribeToHeadingUpdates = function (listener) {
+    return subscriptions.subscribeToHeadingUpdates(listener);
 };
-
 /**
  * Subscribe to significant updates to the users location with the given listener.
  *
@@ -140,27 +108,20 @@ export const subscribeToHeadingUpdates = (
  * @param  {LocationCallback} listener The listener which will be called when the user location significantly changes.
  * @returns {Subscription} The subscription function which can be used to unsubscribe.
  */
-export const subscribeToSignificantLocationUpdates = (
-  listener: (locations: Location[]) => void
-): Subscription => {
-  return subscriptions.subscribeToSignificantLocationUpdates(listener);
+exports.subscribeToSignificantLocationUpdates = function (listener) {
+    return subscriptions.subscribeToSignificantLocationUpdates(listener);
 };
-
-export default {
-  configure,
-  subscribeToLocationUpdates,
-  getLatestLocation,
-  subscribeToHeadingUpdates,
-  subscribeToSignificantLocationUpdates,
-  // Internal use only
-  _configureHelpers,
-  _nativeInterface: nativeInterface,
-  _eventEmitter: eventEmitter
+exports.default = {
+    configure: exports.configure,
+    subscribeToLocationUpdates: exports.subscribeToLocationUpdates,
+    getLatestLocation: exports.getLatestLocation,
+    subscribeToHeadingUpdates: exports.subscribeToHeadingUpdates,
+    subscribeToSignificantLocationUpdates: exports.subscribeToSignificantLocationUpdates,
+    // Internal use only
+    _configureHelpers: exports._configureHelpers,
+    _nativeInterface: nativeInterface,
+    _eventEmitter: eventEmitter
 };
-
-// Export the types
-export * from "./types";
-
 /**
  * @callback LocationPermissionStatusCallback
  * @param {LocationPermissionStatus} status The new permission status.
@@ -169,3 +130,4 @@ export * from "./types";
  * @callback LocationCallback
  * @param {Location} location The new user location.
  */
+//# sourceMappingURL=index.js.map

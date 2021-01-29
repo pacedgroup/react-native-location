@@ -21,7 +21,7 @@ RCT_EXPORT_MODULE()
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"authorizationStatusDidChange", @"headingUpdated", @"locationUpdated", @"onWarning"];
+    return @[@"headingUpdated", @"locationUpdated", @"onWarning"];
 }
 
 #pragma mark - Initialization
@@ -60,58 +60,6 @@ RCT_EXPORT_MODULE()
 - (void)stopObserving
 {
     self.hasListeners = NO;
-}
-
-#pragma mark - Permissions
-
-RCT_REMAP_METHOD(requestAlwaysAuthorization,
-                 requestAlwaysAuthorizationWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    // Get the current status
-    CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
-
-    if (status == kCLAuthorizationStatusAuthorizedAlways) {
-        // We already have the correct status so resolve with true
-        resolve(@(YES));
-    } else if (status == kCLAuthorizationStatusNotDetermined || status == kCLAuthorizationStatusAuthorizedWhenInUse) {
-        // If we have not asked, or we have "when in use" permission, ask for always permission
-        [self.locationManager requestAlwaysAuthorization];
-        // Save the resolver so we can return a result later on
-        self.alwaysPermissionResolver = resolve;
-    } else {
-        // We are not in a state to ask for permission so resolve with false
-        resolve(@(NO));
-    }
-}
-
-RCT_REMAP_METHOD(requestWhenInUseAuthorization,
-                 requestWhenInUseAuthorizationWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    // Get the current status
-    CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
-    
-    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorizedWhenInUse) {
-        // We already have the correct status so resolve with true
-        resolve(@(YES));
-    } else if (status == kCLAuthorizationStatusNotDetermined) {
-        // If we have not asked, or we have "when in use" permission, ask for always permission
-        [self.locationManager requestWhenInUseAuthorization];
-        // Save the resolver so we can return a result later on
-        self.whenInUsePermissionResolver = resolve;
-    } else {
-        // We are not in a state to ask for permission so resolve with false
-        resolve(@(NO));
-    }
-}
-
-RCT_REMAP_METHOD(getAuthorizationStatus,
-                 getAuthorizationStatusWithResolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    NSString *status = [self nameForAuthorizationStatus:[CLLocationManager authorizationStatus]];
-    resolve(status);
 }
 
 #pragma mark - Configure
@@ -230,27 +178,6 @@ RCT_EXPORT_METHOD(stopUpdatingHeading)
 }
 
 #pragma mark - CLLocationManagerDelegate
-
-- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
-{
-    // Handle the always permission resolver
-    if (self.alwaysPermissionResolver != nil) {
-        self.alwaysPermissionResolver(@(status == kCLAuthorizationStatusAuthorizedAlways));
-        self.alwaysPermissionResolver = nil;
-    }
-    
-    // Handle the when in use permission resolver
-    if (self.whenInUsePermissionResolver != nil) {
-        self.whenInUsePermissionResolver(@(status == kCLAuthorizationStatusAuthorizedWhenInUse));
-        self.whenInUsePermissionResolver = nil;
-    }
-    
-    // Handle the event listener
-    if (self.hasListeners) {
-        NSString *statusName = [self nameForAuthorizationStatus:status];
-        [self sendEventWithName:@"authorizationStatusDidChange" body:statusName];
-    }
-}
 
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
 {

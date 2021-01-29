@@ -1,14 +1,3 @@
-export type LocationPermissionStatus =
-  // iOS
-  | "authorizedAlways"
-  | "authorizedWhenInUse"
-  // Android
-  | "authorizedFine"
-  | "authorizedCoarse"
-  // Shared
-  | "denied"
-  | "restricted"
-  | "notDetermined";
 /**
  * Constants indicating the type of activity associated with location updates.
  * @platform ios
@@ -228,19 +217,6 @@ export interface GetLatestLocationOptions {
    * The amount of time in milliseconds which the `getLatestLocation` method should wait before giving up and returning `null`. To turn off the timeout behaviour, give this option a `null` value. If not specified it will default to 10000ms (10 seconds).
    */
   timeout?: number | null;
-}
-
-export interface RequestPermissionOptions {
-  ios?: "whenInUse" | "always" | void;
-  android?: {
-    detail: "coarse" | "fine";
-    rationale?: {
-      title: string;
-      message: string;
-      buttonPositive: string;
-      buttonNegative: string;
-    } | void;
-  } | void;
 }
 
 export type Subscription = () => void;
